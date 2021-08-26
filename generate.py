@@ -162,7 +162,16 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
+    
+    #新增[S]token
+    special_tokens_dict = {'additional_special_tokens': ['[S]']}
+    num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
+    print('We have added', num_added_toks, 'tokens')
+    
     model = GPT2LMHeadModel.from_pretrained(args.model_path)
+    
+    #告訴GPT-2 token總數
+    model.resize_token_embeddings(len(tokenizer))
     model.to(device)
     model.eval()
 
