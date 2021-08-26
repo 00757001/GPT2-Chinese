@@ -86,6 +86,12 @@ def main():
         full_tokenizer = get_encoder(args.encoder_json, args.vocab_bpe)
     else:
         full_tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
+    
+    #增加[S]token
+    special_tokens_dict = {'additional_special_tokens': ['[S]']}
+    num_added_toks = full_tokenizer.add_special_tokens(special_tokens_dict)
+    print('We have added', num_added_toks, 'tokens')
+    
     full_tokenizer.max_len = 999999
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('using device:', device)
@@ -122,6 +128,9 @@ def main():
         model = transformers.modeling_gpt2.GPT2LMHeadModel(config=model_config)
     else:
         model = transformers.modeling_gpt2.GPT2LMHeadModel.from_pretrained(args.pretrained_model)
+    
+    #告訴GPT-2目前token數量
+    model.resize_token_embeddings(len(full_tokenizer)) 
     model.train()
     model.to(device)
 
