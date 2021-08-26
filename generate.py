@@ -187,6 +187,7 @@ def main():
         raw_text = args.prefix
         context_tokens = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(raw_text))
         generated = 0
+        stop = 0
         for _ in range(nsamples // batch_size):
             out = generate(
                 n_ctx=n_ctx,
@@ -205,14 +206,20 @@ def main():
                 for i, item in enumerate(text):
                     if item == '[MASK]':
                         text[i] = ''
-#                     elif item == '[CLS]':
-#                         text[i] = '\n\n'
+                    elif item == '[CLS]':
+                        text[i] = ''
+                        #遇到下一個[CLS]斷句
+                        if i != 1: 
+                            stop = i
+                            break
                     elif item == '[SEP]':
-                        text[i] = '=>'
+                        text[i] = ' => '
                     elif item == '[S]':
                         text[i] = ' '
-                info = "=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40 + "\n"
+                info = "=" * 15 + " SAMPLE " + str(generated) + " " + "=" * 15 + "\n"
                 print(info)
+                
+                text = text[1:stop] #取到stop
                 text = ''.join(text).replace('##', '').strip()
                 print(text)
                 if args.save_samples:
