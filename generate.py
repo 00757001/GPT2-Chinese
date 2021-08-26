@@ -209,7 +209,7 @@ def main():
                     elif item == '[CLS]':
                         text[i] = ''
                         #遇到下一個[CLS]斷句
-                        if i != 1: 
+                        if i != 0: 
                             stop = i
                             break
                     elif item == '[SEP]':
@@ -219,7 +219,7 @@ def main():
                 info = "=" * 15 + " SAMPLE " + str(generated) + " " + "=" * 15 + "\n"
                 print(info)
                 
-                text = text[1:stop] #取到stop
+                text = text[:stop] #取到stop
                 text = ''.join(text).replace('##', '').strip()
                 print(text)
                 if args.save_samples:
