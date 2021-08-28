@@ -1,10 +1,10 @@
+import transformers
 import torch
 import os
 import json
 import random
 import numpy as np
 import argparse
-from transformers import GPT2LMHeadModel, GPT2Config, BertTokenizer, AdamW, WarmupLinearSchedule
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from tqdm import tqdm
@@ -63,30 +63,29 @@ def main():
     parser.add_argument('--output_dir', default='model/', type=str, required=False, help='模型输出路径')
     parser.add_argument('--pretrained_model', default='', type=str, required=False, help='模型训练起点路径')
     parser.add_argument('--writer_dir', default='tensorboard_summary/train/', type=str, required=False, help='Tensorboard路径')
-    #parser.add_argument('--segment', action='store_true', help='中文以词为单位')
-    #parser.add_argument('--bpe_token', action='store_true', help='subword')
+    parser.add_argument('--segment', action='store_true', help='中文以词为单位')
+    parser.add_argument('--bpe_token', action='store_true', help='subword')
     parser.add_argument('--encoder_json', default="tokenizations/encoder.json", type=str, help="encoder.json")
-    #parser.add_argument('--vocab_bpe', default="tokenizations/vocab.bpe", type=str, help="vocab.bpe")
+    parser.add_argument('--vocab_bpe', default="tokenizations/vocab.bpe", type=str, help="vocab.bpe")
 
     args = parser.parse_args()
     print('args:\n' + args.__repr__())
 
-    # if args.segment:
-    #     from tokenizations import tokenization_bert_word_level as tokenization_bert
-    # else:
-    #     from tokenizations import tokenization_bert
+    if args.segment:
+        from tokenizations import tokenization_bert_word_level as tokenization_bert
+    else:
+        from tokenizations import tokenization_bert
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device  # 此处设置程序使用哪些显卡
 
-    model_config = GPT2Config()
+    model_config = transformers.modeling_gpt2.GPT2Config.from_json_file(args.model_config)
     print('config:\n' + model_config.to_json_string())
 
     n_ctx = model_config.n_ctx
-    # if args.bpe_token:
-    #     full_tokenizer = get_encoder(args.encoder_json, args.vocab_bpe)
-    # else:
-    #     full_tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
-    full_tokenizer = BertTokenizer.from_pretrained("ckip/bert-base-chinese")
+    if args.bpe_token:
+        full_tokenizer = get_encoder(args.encoder_json, args.vocab_bpe)
+    else:
+        full_tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
     
     #增加[S]token
     special_tokens_dict = {'additional_special_tokens': ['[S]']}
@@ -126,9 +125,9 @@ def main():
         print('files built')
 
     if not args.pretrained_model:
-        model = GPT2LMHeadModel.from_pretrained('gpt2')
+        model = transformers.modeling_gpt2.GPT2LMHeadModel(config=model_config)
     else:
-        model = GPT2LMHeadModel.from_pretrained(args.pretrained_model)
+        model = transformers.modeling_gpt2.GPT2LMHeadModel.from_pretrained(args.pretrained_model)
     
     #告訴GPT-2目前token數量
     model.resize_token_embeddings(len(full_tokenizer)) 
@@ -150,8 +149,8 @@ def main():
     total_steps = int(full_len / stride * epochs / batch_size / gradient_accumulation)
     print('total steps = {}'.format(total_steps))
 
-    optimizer = AdamW(model.parameters(), lr=lr, correct_bias=True)
-    scheduler = WarmupLinearSchedule(optimizer, warmup_steps=warmup_steps,
+    optimizer = transformers.AdamW(model.parameters(), lr=lr, correct_bias=True)
+    scheduler = transformers.WarmupLinearSchedule(optimizer, warmup_steps=warmup_steps,
                                                           t_total=total_steps)
     if fp16:
         try:
