@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import os
 import argparse
 from tqdm import trange
-from transformers import GPT2LMHeadModel
+from transformers import GPT2LMHeadModel, BertTokenizer
 
 
 def is_word(word):
@@ -145,10 +145,10 @@ def main():
     args = parser.parse_args()
     print('args:\n' + args.__repr__())
 
-    if args.segment:
-        from tokenizations import tokenization_bert_word_level as tokenization_bert
-    else:
-        from tokenizations import tokenization_bert
+    # if args.segment:
+    #     from tokenizations import tokenization_bert_word_level as tokenization_bert
+    # else:
+    #     from tokenizations import tokenization_bert
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device  # 此处设置程序使用哪些显卡
     length = args.length
@@ -161,14 +161,14 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
+    tokenizer = BertTokenizer.from_pretrained('ckiplab/bert-base-chinese')
     
     #新增[S]token
     special_tokens_dict = {'additional_special_tokens': ['[S]']}
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     print('We have added', num_added_toks, 'tokens')
     
-    model = GPT2LMHeadModel.from_pretrained(args.model_path)
+    model = GPT2LMHeadModel.from_pretrained('gpt2')
     
     #告訴GPT-2 token總數
     model.resize_token_embeddings(len(tokenizer))

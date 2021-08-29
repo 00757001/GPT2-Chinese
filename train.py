@@ -4,7 +4,7 @@ import json
 import random
 import numpy as np
 import argparse
-from transformers import GPT2LMHeadModel, GPT2Config, BertTokenizer, AdamW, WarmupLinearSchedule
+from transformers import GPT2LMHeadModel, GPT2Config, BertTokenizer, AdamW, get_linear_schedule_with_warmup
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from tqdm import tqdm
@@ -29,9 +29,9 @@ def build_files(data_path, tokenized_data_path, num_pieces, full_tokenizer, min_
         sublines = [full_tokenizer.convert_tokens_to_ids(line) for line in sublines]
         full_line = []
         for subline in sublines:
-            full_line.append(full_tokenizer.convert_tokens_to_ids('[MASK]'))  # 文章开头添加MASK表示文章开始
+            #full_line.append(full_tokenizer.convert_tokens_to_ids('[MASK]'))  # 文章开头添加MASK表示文章开始
             full_line.extend(subline)
-            full_line.append(full_tokenizer.convert_tokens_to_ids('[CLS]'))  # 文章之间添加CLS表示文章结束
+            #full_line.append(full_tokenizer.convert_tokens_to_ids('[CLS]'))  # 文章之间添加CLS表示文章结束
         with open(tokenized_data_path + 'tokenized_train_{}.txt'.format(i), 'w') as f:
             for id in full_line:
                 f.write(str(id) + ' ')
@@ -86,7 +86,7 @@ def main():
     #     full_tokenizer = get_encoder(args.encoder_json, args.vocab_bpe)
     # else:
     #     full_tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
-    full_tokenizer = BertTokenizer.from_pretrained("ckip/bert-base-chinese")
+    full_tokenizer = BertTokenizer.from_pretrained("ckiplab/bert-base-chinese")
     
     #增加[S]token
     special_tokens_dict = {'additional_special_tokens': ['[S]']}
@@ -151,8 +151,8 @@ def main():
     print('total steps = {}'.format(total_steps))
 
     optimizer = AdamW(model.parameters(), lr=lr, correct_bias=True)
-    scheduler = WarmupLinearSchedule(optimizer, warmup_steps=warmup_steps,
-                                                          t_total=total_steps)
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps,
+                                                          num_training_steps=total_steps)
     if fp16:
         try:
             from apex import amp
