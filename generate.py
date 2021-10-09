@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import os
 import argparse
 from tqdm import trange
-from transformers import GPT2LMHeadModel, BertTokenizer
+from transformers import GPT2LMHeadModel, BertTokenizerFast
 
 
 def is_word(word):
@@ -161,14 +161,14 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    tokenizer = BertTokenizer.from_pretrained('ckiplab/bert-base-chinese')
+    tokenizer = BertTokenizerFast.from_pretrained('ckiplab/bert-base-chinese')
     
     #新增[S]token
     special_tokens_dict = {'additional_special_tokens': ['[S]']}
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     print('We have added', num_added_toks, 'tokens')
     
-    model = GPT2LMHeadModel.from_pretrained('gpt2')
+    model = GPT2LMHeadModel.from_pretrained('ckiplab/gpt2-base-chinese')
     
     #告訴GPT-2 token總數
     model.resize_token_embeddings(len(tokenizer))

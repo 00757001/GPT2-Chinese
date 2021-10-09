@@ -4,7 +4,7 @@ import json
 import random
 import numpy as np
 import argparse
-from transformers import GPT2LMHeadModel, GPT2Config, BertTokenizer, AdamW, get_linear_schedule_with_warmup
+from transformers import GPT2LMHeadModel, GPT2Config, BertTokenizerFast, AdamW, get_linear_schedule_with_warmup
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from tqdm import tqdm
@@ -78,15 +78,15 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.device  # 此处设置程序使用哪些显卡
 
-    model_config = GPT2Config()
-    print('config:\n' + model_config.to_json_string())
+    # model_config = GPT2Config()
+    # print('config:\n' + model_config.to_json_string())
 
-    n_ctx = model_config.n_ctx
+    n_ctx = 1024
     # if args.bpe_token:
     #     full_tokenizer = get_encoder(args.encoder_json, args.vocab_bpe)
     # else:
     #     full_tokenizer = tokenization_bert.BertTokenizer(vocab_file=args.tokenizer_path)
-    full_tokenizer = BertTokenizer.from_pretrained("ckiplab/bert-base-chinese")
+    full_tokenizer = BertTokenizerFast.from_pretrained("ckiplab/bert-base-chinese")
     
     #增加[S]token
     special_tokens_dict = {'additional_special_tokens': ['[S]']}
@@ -126,7 +126,7 @@ def main():
         print('files built')
 
     if not args.pretrained_model:
-        model = GPT2LMHeadModel.from_pretrained('gpt2')
+        model = GPT2LMHeadModel.from_pretrained('ckiplab/gpt2-base-chinese')
     else:
         model = GPT2LMHeadModel.from_pretrained(args.pretrained_model)
     
