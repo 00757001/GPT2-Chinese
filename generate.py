@@ -168,7 +168,10 @@ def main():
     num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
     print('We have added', num_added_toks, 'tokens')
     
-    model = GPT2LMHeadModel.from_pretrained('ckiplab/gpt2-base-chinese')
+    if not args.model_path:
+        model = GPT2LMHeadModel.from_pretrained('ckiplab/gpt2-base-chinese')
+    else:
+        model = GPT2LMHeadModel.from_pretrained(args.model_path)
     
     #告訴GPT-2 token總數
     model.resize_token_embeddings(len(tokenizer))
@@ -187,7 +190,11 @@ def main():
         raw_text = args.prefix
         context_tokens = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(raw_text))
         generated = 0
+
+        #顯示預測句子
         stop = 0
+        sep = False
+
         for _ in range(nsamples // batch_size):
             out = generate(
                 n_ctx=n_ctx,
@@ -209,11 +216,14 @@ def main():
                     elif item == '[CLS]':
                         text[i] = ''
                         #遇到下一個[CLS]斷句
-                        if i != 0: 
+                    elif item == '[SEP]':
+                        if sep == True: 
+                            sep = False
                             stop = i
                             break
-                    elif item == '[SEP]':
-                        text[i] = ' => '
+                        else:
+                            sep = True
+                            text[i] = ' => '
                     elif item == '[S]':
                         text[i] = ' '
                 info = "=" * 15 + " SAMPLE " + str(generated) + " " + "=" * 15 + "\n"
