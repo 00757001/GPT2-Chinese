@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from tqdm import tqdm
 from torch.nn import DataParallel
-from tokenizations.bpe_tokenizer import get_encoder
+#from tokenizations.bpe_tokenizer import get_encoder
 
 
 def build_files(data_path, tokenized_data_path, num_pieces, full_tokenizer, min_length):
