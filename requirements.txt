@@ -4,4 +4,3 @@ numpy
 tqdm
 sklearn
 keras
-future
